@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,system-ui);background:var(--color-background-tertiary,#f5f5f0);color:var(--color-text-primary,#222);font-size:14px;min-height:100vh}
+#app{display:grid;grid-template-columns:240px 1fr 210px;gap:8px;padding:8px;min-height:100vh}
+.panel{background:var(--color-background-primary,#fff);border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-lg,12px);padding:10px;overflow-y:auto}
+h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.mp-display{text-align:center;padding:6px 0 8px}
+.mp-num{font-size:26px;font-weight:500;line-height:1}
+.mp-label{font-size:11px;color:var(--color-text-secondary,#666);margin-top:2px}
+.mp-rate{font-size:12px;color:var(--color-text-secondary,#666);margin-top:2px}
+.penalty-bar{display:none;margin:4px 0 6px;padding:5px 7px;border-radius:var(--border-radius-md,8px);background:var(--color-background-danger,#fee2e2);border:0.5px solid rgba(220,38,38,0.3);font-size:11px;color:var(--color-text-danger,#dc2626);text-align:center}
+#click-btn{width:100%;padding:9px;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:var(--border-radius-md,8px);background:var(--color-background-secondary,#f0f0e8);cursor:pointer;font-size:13px;font-weight:500;transition:transform .1s;margin-bottom:8px}
+#click-btn:active{transform:scale(0.97)}
+.track-tabs{display:flex;gap:3px;margin-bottom:5px}
+.track-tab{flex:1;padding:4px 2px;border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:11px;font-weight:500;color:var(--color-text-secondary,#666);position:relative}
+.track-tab.active{background:var(--color-background-secondary,#f0f0e8);color:var(--color-text-primary,#222);border-color:var(--color-border-secondary,rgba(0,0,0,0.3))}
+.track-tab.locked-tab{opacity:.4;cursor:not-allowed}
+.track-tab .dot{display:none;position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:#16a34a}
+.track-tab.has-affordable .dot{display:block}
+.buy-tabs{display:flex;gap:3px;margin-bottom:8px}
+.buy-tab{flex:1;padding:3px;border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:11px;color:var(--color-text-secondary,#666)}
+.buy-tab.active{background:var(--color-background-secondary,#f0f0e8);color:var(--color-text-primary,#222);border-color:var(--color-border-secondary,rgba(0,0,0,0.3))}
+.upgrade-item{border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);padding:7px;margin-bottom:5px;cursor:pointer}
+.upgrade-item:hover:not(.locked){border-color:var(--color-border-secondary,rgba(0,0,0,0.3));background:var(--color-background-secondary,#f0f0e8)}
+.upgrade-item.locked{opacity:.4;cursor:not-allowed}
+.upgrade-item.maxed{opacity:.6;cursor:not-allowed;border-color:var(--color-border-tertiary,rgba(0,0,0,0.1))}
+.upgrade-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1px}
+.upgrade-name{font-size:12px;font-weight:500}
+.upgrade-count{font-size:11px;color:var(--color-text-secondary,#666)}
+.upgrade-desc{font-size:11px;color:var(--color-text-secondary,#666);margin-bottom:3px}
+.upgrade-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:2px}
+.upgrade-cost{font-size:12px;font-weight:500}
+.upgrade-rate{font-size:11px;color:var(--color-text-secondary,#666)}
+.milestone-badge{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--color-background-warning,#fef3cd);color:var(--color-text-warning,#856404)}
+.track-locked-msg{text-align:center;padding:24px 12px;color:var(--color-text-secondary,#666);font-size:12px;line-height:1.6}
+#log{font-size:11px;line-height:1.6}
+.log-entry{padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.1));color:var(--color-text-secondary,#666)}
+.log-entry.event{color:var(--color-text-danger,#dc2626)}
+.log-entry.good{color:var(--color-text-success,#16a34a)}
+.log-entry.milestone{color:#d97706}
+.stat-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.08));font-size:11px}
+.stat-label{color:var(--color-text-secondary,#666)}
+.currency-row{display:flex;gap:6px;margin-bottom:10px}
+.currency-box{flex:1;text-align:center;background:var(--color-background-secondary,#f0f0e8);border-radius:var(--border-radius-md,8px);padding:6px 4px}
+.currency-num{font-size:18px;font-weight:500}
+.currency-label{font-size:10px;color:var(--color-text-secondary,#666);margin-top:1px}
+.prestige-advisory{font-size:11px;color:var(--color-text-secondary,#666);line-height:1.5;padding:6px;background:var(--color-background-secondary,#f0f0e8);border-radius:var(--border-radius-md,8px);margin-bottom:6px}
+.prestige-btn{width:100%;padding:7px;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:12px;font-weight:500;margin-bottom:6px}
+.prestige-btn:hover{background:var(--color-background-secondary,#f0f0e8)}
+.perm-section-label{font-size:11px;font-weight:500;color:var(--color-text-secondary,#666);margin:8px 0 4px;padding-top:6px;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.1))}
+.perm-upgrade{border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);padding:6px;margin-bottom:4px;cursor:pointer}
+.perm-upgrade:hover:not(.bought):not(.cant-afford){background:var(--color-background-secondary,#f0f0e8)}
+.perm-upgrade.bought{opacity:.45;cursor:default}
+.perm-upgrade.cant-afford{opacity:.35;cursor:not-allowed}
+.perm-name{font-size:11px;font-weight:500}
+.perm-footer{display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-secondary,#666);margin-top:1px}
+#emergency-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center}
+#emergency-overlay.show{display:flex}
+.emergency-box{background:var(--color-background-primary,#fff);border-radius:var(--border-radius-lg,12px);padding:20px;max-width:320px;width:90%}
+.emergency-title{font-size:15px;font-weight:500;margin-bottom:8px;color:var(--color-text-danger,#dc2626)}
+.emergency-desc{font-size:13px;color:var(--color-text-secondary,#666);margin-bottom:14px;line-height:1.5}
+.emergency-btn{padding:7px 14px;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:12px;font-weight:500;margin-right:6px}
+.emergency-btn.primary{background:var(--color-background-danger,#fee2e2);border-color:rgba(220,38,38,0.3);color:var(--color-text-danger,#dc2626)}
+/* Win screen */
+#win-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center}
+#win-overlay.show{display:flex}
+.win-box{background:var(--color-background-primary,#fff);border-radius:var(--border-radius-lg,12px);padding:28px;max-width:420px;width:92%;position:relative}
+.win-logo{font-size:11px;font-weight:700;letter-spacing:.08em;color:#00a1e0;margin-bottom:16px;text-transform:uppercase}
+.win-subject{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--color-text-primary,#222)}
+.win-meta{font-size:11px;color:var(--color-text-secondary,#666);margin-bottom:16px}
+.win-body{font-size:12px;color:var(--color-text-primary,#222);line-height:1.7;margin-bottom:16px}
+.win-body p{margin-bottom:10px}
+.win-body p:last-child{margin-bottom:0}
+.win-footnote{font-size:10px;color:var(--color-text-secondary,#888);line-height:1.5;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.1));margin-bottom:16px}
+.win-migrate-btn{width:100%;padding:9px;border:0.5px solid rgba(0,161,224,0.4);border-radius:var(--border-radius-md,8px);background:#e8f6fd;cursor:pointer;font-size:12px;font-weight:600;color:#00a1e0;margin-bottom:6px}
+.win-migrate-btn:hover{background:#d0ecf9}
+.win-stats{font-size:11px;color:var(--color-text-secondary,#666);text-align:center;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="emergency-overlay">
+  <div class="emergency-box">
+    <div class="emergency-title" id="em-title">Emergency</div>
+    <div class="emergency-desc" id="em-desc"></div>
+    <div>
+      <button class="emergency-btn primary" id="em-fix">Fix it</button>
+      <button class="emergency-btn" id="em-ignore">Ignore (penalty)</button>
+    </div>
+  </div>
+</div>
+<div id="win-overlay">
+  <div class="win-box">
+    <div class="win-logo">☁ Salesforce</div>
+    <div class="win-subject">Important Update Regarding Your Org Environment</div>
+    <div class="win-meta">From: Salesforce Platform Transitions Team &lt;no-reply@salesforce.com&gt;<br>To: You</div>
+    <div class="win-body">
+      <p>We are excited to announce that Classic Metadata Architecture (CMA) will reach end-of-life on <strong>Q3 of next year</strong>. This is a positive step forward as we transition all customers to our next-generation platform, <strong>Hyperforce Unified Org Platform</strong> (HUOP).</p>
+      <p>Your org has been identified as a CMA environment. <strong>All existing configuration, customisation, and metadata will not be carried forward.</strong> A migration guide is available in Help &amp; Training.</p>
+      <p>We understand this represents significant work. Salesforce is committed to making this transition as seamless as possible.*</p>
+    </div>
+    <div class="win-footnote">* Migration tooling is currently in beta. Estimated general availability: TBC. Some metadata types may require manual recreation. Managed packages from the AppExchange will need to be reinstalled individually. Flows built on legacy architecture are not supported in HUOP and will need to be rebuilt from scratch. Your data is safe.** <br><br>** Data migration is the responsibility of the customer.</div>
+    <div class="win-stats" id="win-stats"></div>
+    <button class="win-migrate-btn" id="win-migrate-btn">Begin Migration →</button>
+    <div style="font-size:10px;color:var(--color-text-secondary,#888);text-align:center">This will reset all progress. Double-click to confirm.</div>
+  </div>
+</div>
+<div id="app">
+  <div class="panel">
+    <div class="mp-display">
+      <div class="mp-num" id="mp-display">0</div>
+      <div class="mp-label">Metadata Points</div>
+      <div class="mp-rate" id="mp-rate">0 MP/s</div>
+    </div>
+    <div class="penalty-bar" id="penalty-bar"></div>
+    <button id="click-btn">Deploy a Field ⚡</button>
+    <div class="track-tabs">
+      <button class="track-tab active" data-track="admin">Admin<span class="dot"></span></button>
+      <button class="track-tab locked-tab" data-track="dev">Dev<span class="dot"></span></button>
+      <button class="track-tab locked-tab" data-track="arch">Arch<span class="dot"></span></button>
+      <button class="track-tab locked-tab" data-track="solo">Solo<span class="dot"></span></button>
+    </div>
+    <div class="buy-tabs">
+      <button class="buy-tab active" data-buy="1">x1</button>
+      <button class="buy-tab" data-buy="10">x10</button>
+      <button class="buy-tab" data-buy="next">Next</button>
+      <button class="buy-tab" data-buy="max">Max</button>
+    </div>
+    <div id="upgrades-list"></div>
+  </div>
+  <div class="panel">
+    <h2>Activity Log</h2>
+    <div id="log"></div>
+  </div>
+  <div class="panel">
+    <h2>Prestige</h2>
+    <div class="currency-row">
+      <div class="currency-box"><div class="currency-num" id="cert-display">0</div><div class="currency-label">Certs</div></div>
+      <div class="currency-box" id="badge-box" style="opacity:.35"><div class="currency-num" id="badge-display">0</div><div class="currency-label">Arch Badges</div></div>
+    </div>
+    <div class="prestige-advisory" id="prestige-advisory"></div>
+    <button class="prestige-btn" id="prestige-btn">🚀 Go Live</button>
+    <button class="prestige-btn" id="reset-btn" style="font-size:11px;opacity:.5">Reset all progress</button>
+    <div id="perm-list"></div>
+    <div style="margin-top:10px"><h2>Org Stats</h2><div id="org-stats"></div></div>
+  </div>
+</div>
+<script>
+const SAVE_KEY='orgbuilder_v6';
+const WIN_UPGRADE_ID='s6';
+const WIN_UPGRADE_CAP=1000;
+const UPGRADES={
+  admin:[
+    {id:'a1',name:'Standard Objects',desc:'Accounts, Contacts, the basics.',baseCost:10,baseRate:0.4,flavour:'Someone has to maintain them.'},
+    {id:'a2',name:'Custom Fields',desc:'Because 500 fields is never enough.',baseCost:55,baseRate:1.5,flavour:'Field limit? Never heard of it.'},
+    {id:'a3',name:'Profiles & Permissions',desc:'CRUD access nobody fully understands.',baseCost:280,baseRate:6,flavour:'The profile they asked for does not exist.'},
+    {id:'a4',name:'Validation Rules',desc:'Preventing bad data since 2006.',baseCost:1400,baseRate:22,flavour:'Required: everything, all the time.'},
+    {id:'a5',name:'Reports & Dashboards',desc:'Stakeholders will still use Excel.',baseCost:6000,baseRate:75,flavour:'That chart is now RAL. Obviously.'},
+    {id:'a6',name:'Email Templates',desc:'Managed — obviously.',baseCost:28000,baseRate:260,flavour:'Classic HTML, no inline styles, somehow works.'},
+    {id:'a7',name:'List Views',desc:'Everyone wants their own pinned list.',baseCost:120000,baseRate:900,flavour:'17 list views. None shared. All My Records.'},
+    {id:'a8',name:'Duplicate Rules',desc:'Matching on email. Mostly.',baseCost:500000,baseRate:3500,flavour:'False positives: many. False negatives: also many.'},
+  ],
+  dev:[
+    {id:'d1',name:'Apex Triggers',desc:'Recursive? Definitely recursive.',baseCost:200,baseRate:5,flavour:'One trigger per object. Usually.'},
+    {id:'d2',name:'LWC Components',desc:'Faster than Aura. Allegedly.',baseCost:900,baseRate:18,flavour:'CSS isolation: a feature and a punishment.'},
+    {id:'d3',name:'REST APIs',desc:'Connected apps connecting apps.',baseCost:4000,baseRate:65,flavour:'Named Credential or hardcoded? We do not ask.'},
+    {id:'d4',name:'Scheduled Jobs',desc:'Runs at 2am. May or may not finish.',baseCost:16000,baseRate:220,flavour:'Batch size 200. Always 200.'},
+    {id:'d5',name:'Custom Metadata Types',desc:'Config as code. Basically.',baseCost:70000,baseRate:750,flavour:'Cannot query them in tests easily.'},
+    {id:'d6',name:'Platform Events',desc:'Near real-time. Very near.',baseCost:300000,baseRate:2500,flavour:'Subscribe once. Replay buffer optional.'},
+    {id:'d7',name:'Managed Package',desc:'ISV life. The joys of namespacing.',baseCost:1200000,baseRate:9000,flavour:'__c becomes __c__c. You will get used to it.'},
+  ],
+  arch:[
+    {id:'r1',name:'Record-Triggered Flows',desc:'The Admin\'s Apex.',baseCost:5000,baseRate:30,flavour:'Before-save or after? Yes.'},
+    {id:'r2',name:'Data Model Design',desc:'ERD on a whiteboard. Gone by Monday.',baseCost:20000,baseRate:110,flavour:'The lookup or master-detail debate rages on.'},
+    {id:'r3',name:'Sandboxes',desc:'Dev, partial, full, staging, QA...',baseCost:80000,baseRate:380,flavour:'Refreshed last year. Probably fine.'},
+    {id:'r4',name:'Change Sets',desc:'Deployment via vibes.',baseCost:300000,baseRate:1300,flavour:'Validation error on a thing you did not touch.'},
+    {id:'r5',name:'DevOps Pipeline',desc:'Proper CI/CD. Very professional.',baseCost:1000000,baseRate:4200,flavour:'PRs require two approvals and a prayer.'},
+    {id:'r6',name:'Experience Cloud',desc:'Community portal. Rebranded again.',baseCost:4000000,baseRate:14000,flavour:'Guest user access: always more than intended.'},
+    {id:'r7',name:'Einstein Features',desc:'AI. Mostly credits for Copilot demos.',baseCost:15000000,baseRate:45000,flavour:'The ROI slide is chefs kiss.'},
+  ],
+  solo:[
+    {id:'s1',name:'Writes Own Documentation',desc:'Nobody reads it. Still worth it.',baseCost:500000,baseRate:8000,flavour:'Confluence page: last edited by you, 2 years ago.'},
+    {id:'s2',name:'Answers Own Trailhead Questions',desc:'The forum thanks you.',baseCost:2000000,baseRate:28000,flavour:'Accepted answer: also you.'},
+    {id:'s3',name:'Migrated from Classic',desc:'Single-handedly. Over a long weekend.',baseCost:8000000,baseRate:90000,flavour:'Lightning transition guide? Skim-read on Friday.'},
+    {id:'s4',name:'Does the School Run Too',desc:'Deploys at 8:45am. From a car park.',baseCost:30000000,baseRate:280000,flavour:'Hotfix applied before first coffee.'},
+    {id:'s5',name:'Maintains Undocumented Legacy Flows',desc:'17 active. Author unknown.',baseCost:100000000,baseRate:850000,flavour:'One of them emails the CEO. Nobody knows why.'},
+    {id:'s6',name:'The Entire Org, Alone',desc:'Admin. Dev. Architect. Support. Trainer.',baseCost:500000000,baseRate:3000000,flavour:'Out of office set. Org still running perfectly.',cap:1000},
+  ]
+};
+const MILESTONES=[25,50,100,200,300,500];
+const MILESTONE_MULT={25:2,50:5,100:10,200:20,300:35,500:60};
+const PERM_CERTS=[
+  {id:'p_rateA',name:'Certified Admin',desc:'+30% all passive rates',cost:5,tier:1},
+  {id:'p_click',name:'Power User',desc:'Click value x3',cost:6,tier:1},
+  {id:'p_unlock_dev',name:'Unlock Dev Track',desc:'Access the Dev upgrade track',cost:10,tier:1},
+  {id:'p_rateB',name:'Seasoned Admin',desc:'+50% all passive rates',cost:12,tier:1},
+  {id:'p_noemerg',name:'Technical Debt Cleared',desc:'Emergencies never penalise rates',cost:15,tier:1},
+  {id:'p_unlock_arch',name:'Unlock Arch Track',desc:'Access the Arch upgrade track',cost:25,tier:2},
+  {id:'p_certmult',name:'Multi-Certified',desc:'Cert haul x1.5 on Go Live',cost:20,tier:2},
+  {id:'p_keepmp',name:'CI/CD Pipeline',desc:'Keep 15% MP on prestige',cost:22,tier:2},
+  {id:'p_milestone',name:'Efficiency Drive',desc:'Milestone bonuses at half count',cost:30,tier:2},
+  {id:'p_ratemult',name:'Platform Expert',desc:'All rates x2',cost:35,tier:2},
+  {id:'p_unlock_solo',name:'Unlock Solo Admin Track',desc:'The ultimate track.',cost:60,tier:3},
+  {id:'p_rateD',name:'Org Whisperer',desc:'All rates x3',cost:55,tier:3},
+  {id:'p_clickB',name:'Keyboard Shortcut Master',desc:'Click value x5',cost:45,tier:3},
+  {id:'p_certmultB',name:'10x Certified',desc:'Cert haul x2',cost:50,tier:3},
+];
+const PERM_BADGES=[
+  {id:'b_rateE',name:'Solution Architect',desc:'All rates x4',cost:3},
+  {id:'b_soloboost',name:'Solo Admin Multiplier',desc:'Solo track rates x3',cost:4},
+  {id:'b_milestoneB',name:'Speed Runner',desc:'Milestone bonuses at quarter count',cost:5},
+  {id:'b_keepmpB',name:'Scratch Org Muscle Memory',desc:'Keep 30% MP on prestige',cost:4},
+  {id:'b_rateF',name:'Enterprise Architect',desc:'All rates x6',cost:8},
+  {id:'b_certmultC',name:'CTA',desc:'Cert haul x3',cost:7},
+  {id:'b_clickC',name:'Macro King',desc:'Click value x10',cost:6},
+  {id:'b_rateG',name:'Distinguished Architect',desc:'All rates x10',cost:15},
+];
+const EMERGENCIES=[
+  {title:'Deploy Failed in Prod',desc:'A flow validation error in production. The exec is on the phone.',fixCost:0.25,penalty:'rate',penaltyVal:0.5,penaltyDur:75000,fixLabel:'Hotfix (25% MP)'},
+  {title:'A Consultant Has Arrived',desc:'47 fields added to Account. New profile: Super Admin. Legend.',fixCost:0.15,penalty:'rate',penaltyVal:0.65,penaltyDur:50000,fixLabel:'Refactor (15% MP)'},
+  {title:'Governor Limits Hit',desc:'Apex trigger fired recursively. 101 SOQL queries. Classic.',fixCost:0.2,penalty:'click',penaltyVal:0.5,penaltyDur:60000,fixLabel:'Fix trigger (20% MP)'},
+  {title:'Stakeholder Wants Everything in Flow',desc:'By Friday. Including the thing that took 6 months in Apex.',fixCost:0.1,penalty:'rate',penaltyVal:0.75,penaltyDur:45000,fixLabel:'Agree and weep (10% MP)'},
+  {title:'Sandbox Corrupted',desc:'Someone ran a delete on prod data. In a partial sandbox.',fixCost:0.25,penalty:'rate',penaltyVal:0.6,penaltyDur:70000,fixLabel:'Restore backup (25% MP)'},
+  {title:'Package Update Broke Everything',desc:'Version 3.84 dropped. Custom fields gone. Vendor is investigating.',fixCost:0.18,penalty:'rate',penaltyVal:0.75,penaltyDur:55000,fixLabel:'Rollback (18% MP)'},
+  {title:'Rogue Workflow Rule Found',desc:'Been running since 2016. Nobody knows what it does.',fixCost:0.12,penalty:'rate',penaltyVal:0.8,penaltyDur:40000,fixLabel:'Leave it (12% MP to suppress)'},
+  {title:'Storage at 100%',desc:'Org storage full. Probably ContentVersion.',fixCost:0.2,penalty:'rate',penaltyVal:0.55,penaltyDur:65000,fixLabel:'Archive something (20% MP)'},
+  {title:'Formula Field Returning Null',desc:'Posted on the community. SteveMo answered in 4 minutes. The formula was fine. The field type was wrong. You owe him a beer.',fixCost:0.05,penalty:'click',penaltyVal:0.9,penaltyDur:20000,fixLabel:'Buy SteveMo a beer (5% MP)'},
+];
+const RANDOM_EVENTS=[
+  'Someone opened a case: "The button is the wrong shade of blue".',
+  'IT discovered 12 connected apps. You only know about 4.',
+  '"Can you just add a quick field?" — famous last words.',
+  'New admin joined. First question: "What is a master-detail?"',
+  'Release notes dropped. Einstein got another rebrand.',
+  'Email-to-case routing mysteriously started BCC\'ing the CEO.',
+  'Validation rule fires. Error message: "Contact IT". You are IT.',
+  'A workflow rule has been running since 2014. Left it.',
+  'AppExchange review: 1 star. "Did not do what I thought it would".',
+  'Scheduled job hit max heap size. Again.',
+  'Someone shared a list view with All Users. 400 list views now exist.',
+  'A Flow was named "TEMP - delete this". Created 2019. Still active.',
+  'Three people asked for Sys Admin profile. Gave none of them it.',
+];
+
+function fmtNum(n){
+  if(n>=1e15)return(n/1e15).toFixed(2)+'Qa';
+  if(n>=1e12)return(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'k';
+  return Math.floor(n).toString();
+}
+function upgradeCost(base,count){return Math.floor(base*Math.pow(1.12,count));}
+function getMilestoneMult(count,mf){
+  let mult=1;
+  MILESTONES.forEach(m=>{if(count>=Math.ceil(m*mf))mult=MILESTONE_MULT[m];});
+  return mult;
+}
+function upgradeRate(u,count,S){
+  if(count===0)return 0;
+  const mf=S.milestoneFactor||1;
+  let r=u.baseRate*count*getMilestoneMult(count,mf)*(1+S.rateBonus)*(S.rateMult||1);
+  if(u.id[0]==='s')r*=(S.soloBoost||1);
+  if(S.emergencyPenalty&&S.emergencyPenalty.type==='rate')r*=S.emergencyPenalty.val;
+  return r;
+}
+function getTotalRate(S){
+  let r=0;
+  ['admin','dev','arch','solo'].forEach(track=>{
+    if(!isUnlocked(track,S))return;
+    UPGRADES[track].forEach(u=>r+=upgradeRate(u,S.counts[u.id]||0,S));
+  });
+  return r;
+}
+function getClickValue(S){
+  let v=(1+S.rateBonus)*(S.rateMult||1)*(S.clickBonus||1);
+  if(S.emergencyPenalty&&S.emergencyPenalty.type==='click')v*=S.emergencyPenalty.val;
+  return Math.max(1,v);
+}
+function isUnlocked(track,S){
+  return track==='admin'||(S.unlockedTracks||[]).includes(track);
+}
+function calcCerts(S){
+  const score=S.totalMp;
+  if(score<5000)return 0;
+  return Math.max(0,Math.floor((Math.log10(score)-3)*3*(S.certMult||1)));
+}
+function calcBadges(S){
+  if(S.run<4)return 0;
+  const score=S.totalMp;
+  if(score<5000)return 0;
+  return Math.max(1,Math.floor((Math.log10(score)-3)*2*(S.certMult||1)));
+}
+function defaultState(){
+  return{mp:0,totalMp:0,run:1,certs:0,badges:0,totalCerts:0,totalBadges:0,
+    counts:{},permBought:[],unlockedTracks:[],
+    rateBonus:0,rateMult:1,clickBonus:1,certMult:1,keepMp:0,
+    noemergency:false,soloBoost:1,milestoneFactor:1,emergencyPenalty:null};
+}
+function loadState(){
+  try{const r=localStorage.getItem(SAVE_KEY);if(r)return Object.assign(defaultState(),JSON.parse(r));}catch(e){}
+  return defaultState();
+}
+function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+
+let S=loadState();
+let activeTrack='admin';
+let buyMode='1';
+let lastTick=Date.now();
+let emergencyActive=false;
+let winShown=false;
+let logEntries=[];
+
+function addLog(msg,type=''){
+  logEntries.unshift({msg,type});
+  if(logEntries.length>80)logEntries.pop();
+  document.getElementById('log').innerHTML=logEntries.slice(0,35).map(e=>`<div class="log-entry ${e.type}">${e.msg}</div>`).join('');
+}
+function getBuyQty(u){
+  const cnt=S.counts[u.id]||0;
+  const cap=u.cap||Infinity;
+  const remaining=cap-cnt;
+  if(remaining<=0)return 0;
+  const mf=S.milestoneFactor||1;
+  if(buyMode==='1')return Math.min(1,remaining);
+  if(buyMode==='10')return Math.min(10,remaining);
+  if(buyMode==='next'){
+    const next=MILESTONES.map(m=>Math.ceil(m*mf)).find(m=>m>cnt);
+    return next?Math.min(Math.max(1,next-cnt),remaining):Math.min(1,remaining);
+  }
+  let q=0,mp=S.mp,c=cnt;
+  while(q<10000&&q<remaining){const cost=upgradeCost(u.baseCost,c);if(mp<cost)break;mp-=cost;c++;q++;}
+  return Math.max(1,q);
+}
+function totalCost(u,qty){
+  const cnt=S.counts[u.id]||0;
+  let t=0;for(let i=0;i<qty;i++)t+=upgradeCost(u.baseCost,cnt+i);return t;
+}
+function showWinScreen(){
+  winShown=true;
+  const tot=Object.values(S.counts).reduce((a,b)=>a+b,0);
+  document.getElementById('win-stats').textContent=
+    `Run #${S.run} · ${S.totalCerts} certs earned · ${fmtNum(S.totalMp)} lifetime MP · ${tot} total upgrades`;
+  document.getElementById('win-overlay').classList.add('show');
+  saveState();
+}
+function doReset(){
+  localStorage.removeItem(SAVE_KEY);
+  S=defaultState();
+  logEntries=[];activeTrack='admin';buyMode='1';lastTick=Date.now();emergencyActive=false;winShown=false;
+  document.querySelectorAll('.buy-tab').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('.track-tab').forEach(b=>{b.classList.remove('active','has-affordable');b.classList.toggle('locked-tab',b.dataset.track!=='admin');});
+  document.querySelector('.track-tab[data-track="admin"]').classList.add('active');
+  document.getElementById('penalty-bar').style.display='none';
+  document.getElementById('win-overlay').classList.remove('show');
+  addLog('Migration initiated. New org. Same admin. Different vibes.','good');
+  fullRender();
+}
+function renderUpgrades(){
+  const el=document.getElementById('upgrades-list');
+  if(!isUnlocked(activeTrack,S)){
+    const req={dev:'10 certs',arch:'25 certs',solo:'60 certs'};
+    el.innerHTML=`<div class="track-locked-msg"><strong>${activeTrack.charAt(0).toUpperCase()+activeTrack.slice(1)} track locked</strong><br>Unlock via permanent upgrade (${req[activeTrack]})</div>`;
+    return;
+  }
+  el.innerHTML=UPGRADES[activeTrack].map(u=>{
+    const cnt=S.counts[u.id]||0;
+    const cap=u.cap||Infinity;
+    const isMaxed=cnt>=cap;
+    const qty=isMaxed?0:getBuyQty(u);
+    const cost=isMaxed?0:totalCost(u,qty);
+    const mf=S.milestoneFactor||1;
+    const effMilestones=MILESTONES.map(m=>Math.ceil(m*mf));
+    const nextIdx=effMilestones.findIndex(m=>m>cnt);
+    const milBadge=!isMaxed&&nextIdx>=0&&cnt>0?`<span class="milestone-badge">x${MILESTONE_MULT[MILESTONES[nextIdx]]} @${effMilestones[nextIdx]}</span>`:'';
+    const qtyLabel=isMaxed?'MAX':buyMode==='max'?`x${qty}`:buyMode==='next'?`+${qty}`:buyMode==='10'?'x10':'x1';
+    const costLabel=isMaxed?'—':fmtNum(cost)+' MP '+qtyLabel;
+    return `<div class="upgrade-item${isMaxed?' maxed':S.mp>=cost?'':' locked'}" data-id="${u.id}">
+      <div class="upgrade-header"><span class="upgrade-name">${u.name}</span><span class="upgrade-count">${isMaxed?'MAX':cnt}</span></div>
+      <div class="upgrade-desc">${u.desc}</div>
+      <div class="upgrade-footer">
+        <span class="upgrade-cost">${costLabel}</span>
+        <span class="upgrade-rate">${fmtNum(upgradeRate(u,cnt,S))}/s</span>
+        ${milBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderTrackTabs(){
+  ['admin','dev','arch','solo'].forEach(t=>{
+    const btn=document.querySelector(`.track-tab[data-track="${t}"]`);
+    if(!btn)return;
+    const unlocked=isUnlocked(t,S);
+    btn.classList.toggle('locked-tab',!unlocked);
+    btn.classList.toggle('has-affordable',unlocked&&UPGRADES[t].some(u=>{
+      const cnt=S.counts[u.id]||0;
+      const cap=u.cap||Infinity;
+      if(cnt>=cap)return false;
+      return S.mp>=totalCost(u,getBuyQty(u));
+    }));
+  });
+}
+function renderPrestige(){
+  const certs=calcCerts(S);
+  const badges=calcBadges(S);
+  const minC=PERM_CERTS.filter(p=>!S.permBought.includes(p.id)).map(p=>p.cost).reduce((a,b)=>Math.min(a,b),999);
+  let adv=certs<2?`${certs} cert — not enough yet. Keep building.`:
+    certs<6?`${certs} certs. Cheapest perm: ${minC}. Maybe grind more.`:
+    certs<15?`${certs} certs — decent. Go Live is reasonable.`:
+    `${certs} certs — strong haul. Go Live now.`;
+  if(S.run>=4)adv+=` (+${badges} Arch Badges)`;
+  document.getElementById('prestige-advisory').textContent=adv;
+  document.getElementById('cert-display').textContent=S.certs;
+  document.getElementById('badge-display').textContent=S.badges;
+  document.getElementById('badge-box').style.opacity=S.run>=4?'1':'0.35';
+  const btn=document.getElementById('prestige-btn');
+  const can=certs>=2;
+  btn.dataset.canPrestige=can?'1':'0';
+  btn.style.opacity=can?'1':'0.4';
+  btn.style.cursor=can?'pointer':'not-allowed';
+  btn.textContent=can?`🚀 Go Live (${certs} certs${S.run>=4?' +'+badges+' badges':''})`:`🚀 Go Live (need 2+ certs)`;
+}
+function renderPermList(){
+  const tierLabels={1:'Career — Run 1+',2:'Senior — Run 2+',3:'Principal — Run 3+'};
+  let html='';let lastTier=0;
+  PERM_CERTS.forEach(p=>{
+    if(p.tier!==lastTier){html+=`<div class="perm-section-label">${tierLabels[p.tier]}</div>`;lastTier=p.tier;}
+    const bought=S.permBought.includes(p.id);
+    html+=`<div class="perm-upgrade${bought?' bought':S.certs>=p.cost?'':' cant-afford'}" data-perm="${p.id}">
+      <div class="perm-name">${p.name}</div>
+      <div class="perm-footer"><span>${p.desc}</span><span>${bought?'✓':p.cost+' certs'}</span></div>
+    </div>`;
+  });
+  if(S.run>=4){
+    html+=`<div class="perm-section-label">Arch Badges</div>`;
+    PERM_BADGES.forEach(p=>{
+      const bought=S.permBought.includes(p.id);
+      html+=`<div class="perm-upgrade${bought?' bought':S.badges>=p.cost?'':' cant-afford'}" data-perm="${p.id}" data-currency="badges">
+        <div class="perm-name">${p.name}</div>
+        <div class="perm-footer"><span>${p.desc}</span><span>${bought?'✓':p.cost+' badges'}</span></div>
+      </div>`;
+    });
+  }
+  document.getElementById('perm-list').innerHTML=html;
+}
+function renderStats(){
+  const tot=Object.values(S.counts).reduce((a,b)=>a+b,0);
+  document.getElementById('org-stats').innerHTML=`
+    <div class="stat-row"><span class="stat-label">MP/s</span><span>${fmtNum(getTotalRate(S))}</span></div>
+    <div class="stat-row"><span class="stat-label">Per click</span><span>${fmtNum(getClickValue(S))}</span></div>
+    <div class="stat-row"><span class="stat-label">Total upgrades</span><span>${tot}</span></div>
+    <div class="stat-row"><span class="stat-label">Lifetime MP</span><span>${fmtNum(S.totalMp)}</span></div>
+    <div class="stat-row"><span class="stat-label">Run</span><span>#${S.run}</span></div>
+    <div class="stat-row"><span class="stat-label">Total certs</span><span>${S.totalCerts}</span></div>`;
+}
+function fullRender(){
+  document.getElementById('mp-display').textContent=fmtNum(S.mp);
+  document.getElementById('mp-rate').textContent=fmtNum(getTotalRate(S))+' MP/s';
+  renderUpgrades();
+  renderTrackTabs();
+  renderPrestige();
+  renderPermList();
+  renderStats();
+}
+function applyPerm(id){
+  if(id==='p_rateA')S.rateBonus+=0.3;
+  if(id==='p_rateB')S.rateBonus+=0.5;
+  if(id==='p_click')S.clickBonus=(S.clickBonus||1)*3;
+  if(id==='p_clickB')S.clickBonus=(S.clickBonus||1)*5;
+  if(id==='p_unlock_dev')(S.unlockedTracks=S.unlockedTracks||[]).push('dev');
+  if(id==='p_unlock_arch')(S.unlockedTracks=S.unlockedTracks||[]).push('arch');
+  if(id==='p_unlock_solo')(S.unlockedTracks=S.unlockedTracks||[]).push('solo');
+  if(id==='p_noemerg')S.noemergency=true;
+  if(id==='p_certmult')S.certMult=(S.certMult||1)*1.5;
+  if(id==='p_certmultB')S.certMult=(S.certMult||1)*2;
+  if(id==='p_keepmp')S.keepMp=Math.min(0.9,(S.keepMp||0)+0.15);
+  if(id==='p_milestone')S.milestoneFactor=0.5;
+  if(id==='p_ratemult')S.rateMult=(S.rateMult||1)*2;
+  if(id==='p_rateD')S.rateMult=(S.rateMult||1)*3;
+  if(id==='b_rateE')S.rateMult=(S.rateMult||1)*4;
+  if(id==='b_soloboost')S.soloBoost=(S.soloBoost||1)*3;
+  if(id==='b_milestoneB')S.milestoneFactor=0.25;
+  if(id==='b_keepmpB')S.keepMp=Math.min(0.9,(S.keepMp||0)+0.3);
+  if(id==='b_rateF')S.rateMult=(S.rateMult||1)*6;
+  if(id==='b_certmultC')S.certMult=(S.certMult||1)*3;
+  if(id==='b_clickC')S.clickBonus=(S.clickBonus||1)*10;
+  if(id==='b_rateG')S.rateMult=(S.rateMult||1)*10;
+}
+function triggerEmergency(){
+  emergencyActive=true;
+  const em=EMERGENCIES[Math.floor(Math.random()*EMERGENCIES.length)];
+  document.getElementById('em-title').textContent='🚨 '+em.title;
+  document.getElementById('em-desc').textContent=em.desc;
+  document.getElementById('em-fix').textContent=em.fixLabel;
+  document.getElementById('emergency-overlay').classList.add('show');
+  addLog('🚨 '+em.title,'event');
+  document.getElementById('em-fix').onclick=()=>{
+    S.mp=Math.max(0,S.mp*(1-em.fixCost));
+    emergencyActive=false;
+    document.getElementById('emergency-overlay').classList.remove('show');
+    addLog('Emergency resolved. Dignity: partially intact.','good');
+  };
+  document.getElementById('em-ignore').onclick=()=>{
+    if(!S.noemergency)S.emergencyPenalty={type:em.penalty,val:1-em.penaltyVal,expires:Date.now()+em.penaltyDur};
+    emergencyActive=false;
+    document.getElementById('emergency-overlay').classList.remove('show');
+    addLog(S.noemergency?'Ignored — no penalty (debt cleared).':'Ignored. The org suffers.',S.noemergency?'good':'event');
+  };
+}
+
+document.getElementById('click-btn').addEventListener('click',()=>{
+  const v=getClickValue(S);S.mp+=v;S.totalMp+=v;
+  document.getElementById('mp-display').textContent=fmtNum(S.mp);
+});
+document.querySelectorAll('.track-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const t=btn.dataset.track;
+    if(!isUnlocked(t,S))return;
+    activeTrack=t;
+    document.querySelectorAll('.track-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderUpgrades();
+  });
+});
+document.querySelectorAll('.buy-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    buyMode=btn.dataset.buy;
+    document.querySelectorAll('.buy-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderUpgrades();
+  });
+});
+document.getElementById('upgrades-list').addEventListener('click',e=>{
+  const item=e.target.closest('[data-id]');
+  if(!item)return;
+  const allU=[...UPGRADES.admin,...UPGRADES.dev,...UPGRADES.arch,...UPGRADES.solo];
+  const u=allU.find(x=>x.id===item.dataset.id);
+  if(!u)return;
+  const cap=u.cap||Infinity;
+  const cnt=S.counts[u.id]||0;
+  if(cnt>=cap)return;
+  const qty=getBuyQty(u);
+  const cost=totalCost(u,qty);
+  if(S.mp<cost)return;
+  S.mp-=cost;
+  const old=S.counts[u.id]||0;
+  S.counts[u.id]=Math.min(old+qty,cap);
+  const nw=S.counts[u.id];
+  const mf=S.milestoneFactor||1;
+  MILESTONES.forEach(m=>{
+    const em=Math.ceil(m*mf);
+    if(old<em&&nw>=em)addLog(`Milestone! ${u.name} hit ${em} — rate x${MILESTONE_MULT[m]}!`,'milestone');
+  });
+  if(old===0)addLog(`Purchased: ${u.name}. ${u.flavour}`);
+  // Check win condition
+  if(u.id===WIN_UPGRADE_ID&&nw>=WIN_UPGRADE_CAP&&!winShown){
+    addLog('The Entire Org, Alone: fully realised. There is nothing left to configure.','milestone');
+    setTimeout(showWinScreen,800);
+  }
+  renderUpgrades();
+  renderStats();
+});
+document.getElementById('perm-list').addEventListener('click',e=>{
+  const item=e.target.closest('[data-perm]');
+  if(!item)return;
+  const id=item.dataset.perm;
+  const isBadge=item.dataset.currency==='badges';
+  const pool=isBadge?PERM_BADGES:PERM_CERTS;
+  const p=pool.find(x=>x.id===id);
+  if(!p||S.permBought.includes(p.id))return;
+  const bal=isBadge?S.badges:S.certs;
+  if(bal<p.cost)return;
+  if(isBadge)S.badges-=p.cost;else S.certs-=p.cost;
+  S.permBought.push(p.id);
+  applyPerm(id);
+  addLog(`Permanent upgrade: ${p.name}`,'good');
+  fullRender();saveState();
+});
+document.getElementById('prestige-btn').addEventListener('click',()=>{
+  const btn=document.getElementById('prestige-btn');
+  if(btn.dataset.canPrestige!=='1')return;
+  if(btn.dataset.confirming==='1'){
+    btn.dataset.confirming='0';btn.style.background='';
+    const certs=calcCerts(S);const badges=calcBadges(S);
+    S.certs+=certs;S.totalCerts+=certs;
+    if(S.run>=4){S.badges+=badges;S.totalBadges+=badges;}
+    const keep=S.mp*(S.keepMp||0);
+    S.mp=keep;S.totalMp=keep;
+    S.counts={};S.run++;S.emergencyPenalty=null;
+    addLog(`Went Live! +${certs} certs${S.run>4?' +'+badges+' badges':''} earned. Run #${S.run} starts.`,'good');
+    fullRender();saveState();return;
+  }
+  btn.dataset.confirming='1';
+  btn.textContent='Confirm? Click again to go live';
+  btn.style.background='var(--color-background-warning,#fef3cd)';
+  setTimeout(()=>{if(btn.dataset.confirming==='1'){btn.dataset.confirming='0';btn.style.background='';renderPrestige();}},4000);
+});
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  const btn=document.getElementById('reset-btn');
+  if(btn.dataset.confirming==='1'){
+    btn.dataset.confirming='0';btn.style.background='';btn.style.opacity='.5';btn.textContent='Reset all progress';
+    doReset();return;
+  }
+  btn.dataset.confirming='1';btn.textContent='Confirm reset? Click again';
+  btn.style.opacity='1';btn.style.background='var(--color-background-warning,#fef3cd)';
+  setTimeout(()=>{if(btn.dataset.confirming==='1'){btn.dataset.confirming='0';btn.textContent='Reset all progress';btn.style.opacity='.5';btn.style.background='';}},4000);
+});
+// Win screen migrate button — double-click confirm
+document.getElementById('win-migrate-btn').addEventListener('click',()=>{
+  const btn=document.getElementById('win-migrate-btn');
+  if(btn.dataset.confirming==='1'){
+    btn.dataset.confirming='0';
+    doReset();return;
+  }
+  btn.dataset.confirming='1';
+  btn.textContent='Are you sure? Click again to begin migration';
+  setTimeout(()=>{
+    if(btn.dataset.confirming==='1'){
+      btn.dataset.confirming='0';
+      btn.textContent='Begin Migration →';
+    }
+  },4000);
+});
+
+setInterval(()=>{
+  const now=Date.now();
+  const dt=Math.min((now-lastTick)/1000,1);
+  lastTick=now;
+  const rate=getTotalRate(S);
+  S.mp+=rate*dt;S.totalMp+=rate*dt;
+  const pbar=document.getElementById('penalty-bar');
+  if(S.emergencyPenalty){
+    if(now>S.emergencyPenalty.expires){
+      S.emergencyPenalty=null;
+      pbar.style.display='none';
+      addLog('Emergency penalty expired. Back to normal.','good');
+    } else {
+      const secs=Math.ceil((S.emergencyPenalty.expires-now)/1000);
+      const pct=Math.round((1-S.emergencyPenalty.val)*100);
+      const type=S.emergencyPenalty.type==='rate'?'MP/s':'click value';
+      pbar.style.display='block';
+      pbar.textContent=`⚠ ${pct}% ${type} penalty — ${secs}s remaining`;
+    }
+  } else {
+    pbar.style.display='none';
+  }
+  document.getElementById('mp-display').textContent=fmtNum(S.mp);
+  document.getElementById('mp-rate').textContent=fmtNum(rate)+' MP/s';
+  renderTrackTabs();
+  if(isUnlocked(activeTrack,S)){
+    UPGRADES[activeTrack].forEach(u=>{
+      const el=document.querySelector(`[data-id="${u.id}"]`);
+      if(!el)return;
+      const cap=u.cap||Infinity;
+      const cnt=S.counts[u.id]||0;
+      if(cnt>=cap)return;
+      const qty=getBuyQty(u);
+      const cost=totalCost(u,qty);
+      el.classList.toggle('locked',S.mp<cost);
+      if(buyMode==='max'||buyMode==='next'){
+        const costEl=el.querySelector('.upgrade-cost');
+        const qtyLabel=buyMode==='max'?`x${qty}`:`+${qty}`;
+        if(costEl)costEl.textContent=fmtNum(cost)+' MP '+qtyLabel;
+      }
+    });
+  }
+},200);
+
+setInterval(()=>{
+  if(Math.random()<0.003)addLog(RANDOM_EVENTS[Math.floor(Math.random()*RANDOM_EVENTS.length)]);
+  if(!emergencyActive&&!S.noemergency){
+    const tot=Object.values(S.counts).reduce((a,b)=>a+b,0);
+    if(tot>=5&&Math.random()<0.004)triggerEmergency();
+  }
+},500);
+
+setInterval(saveState,10000);
+
+addLog('Welcome to the org. Clean slate. For now.','good');
+if(S.run>1)addLog(`Resumed run #${S.run}. ${S.totalCerts} total certs earned.`,'good');
+fullRender();
+</script>
+</body></html>
