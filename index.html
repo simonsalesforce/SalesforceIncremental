@@ -2,8 +2,9 @@
 <html><head><meta charset="UTF-8">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans,system-ui);background:var(--color-background-tertiary,#f5f5f0);color:var(--color-text-primary,#222);font-size:14px;min-height:100vh}
-#app{display:grid;grid-template-columns:240px 1fr 210px;gap:8px;padding:8px;min-height:100vh}
+body{font-family:var(--font-sans,system-ui);background:var(--color-background-tertiary,#f5f5f0);color:var(--color-text-primary,#222);font-size:14px;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
+#app{display:grid;grid-template-columns:240px 1fr 210px;gap:8px;padding:8px;width:100%;max-width:900px;align-items:start}
+@media(max-width:700px){#app{grid-template-columns:1fr}}
 .panel{background:var(--color-background-primary,#fff);border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-lg,12px);padding:10px;overflow-y:auto}
 h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
 .mp-display{text-align:center;padding:6px 0 8px}
@@ -23,17 +24,19 @@ h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-tr
 .buy-tab{flex:1;padding:3px;border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:11px;color:var(--color-text-secondary,#666)}
 .buy-tab.active{background:var(--color-background-secondary,#f0f0e8);color:var(--color-text-primary,#222);border-color:var(--color-border-secondary,rgba(0,0,0,0.3))}
 .upgrade-item{border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:var(--border-radius-md,8px);padding:7px;margin-bottom:5px;cursor:pointer}
-.upgrade-item:hover:not(.locked){border-color:var(--color-border-secondary,rgba(0,0,0,0.3));background:var(--color-background-secondary,#f0f0e8)}
+.upgrade-item:hover:not(.locked):not(.maxed){border-color:var(--color-border-secondary,rgba(0,0,0,0.3));background:var(--color-background-secondary,#f0f0e8)}
 .upgrade-item.locked{opacity:.4;cursor:not-allowed}
 .upgrade-item.maxed{opacity:.6;cursor:not-allowed;border-color:var(--color-border-tertiary,rgba(0,0,0,0.1))}
 .upgrade-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1px}
 .upgrade-name{font-size:12px;font-weight:500}
 .upgrade-count{font-size:11px;color:var(--color-text-secondary,#666)}
 .upgrade-desc{font-size:11px;color:var(--color-text-secondary,#666);margin-bottom:3px}
-.upgrade-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:2px}
-.upgrade-cost{font-size:12px;font-weight:500}
-.upgrade-rate{font-size:11px;color:var(--color-text-secondary,#666)}
-.milestone-badge{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--color-background-warning,#fef3cd);color:var(--color-text-warning,#856404)}
+.upgrade-footer{display:flex;flex-direction:column;gap:3px}
+.upgrade-footer-row{display:flex;justify-content:space-between;align-items:center;white-space:nowrap}
+.upgrade-cost{font-size:12px;font-weight:500;white-space:nowrap}
+.upgrade-rate{font-size:11px;color:var(--color-text-secondary,#666);white-space:nowrap}
+.upgrade-rate .arrow{color:var(--color-text-secondary,#999);margin:0 2px}
+.milestone-badge{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--color-background-warning,#fef3cd);color:var(--color-text-warning,#856404);white-space:nowrap}
 .track-locked-msg{text-align:center;padding:24px 12px;color:var(--color-text-secondary,#666);font-size:12px;line-height:1.6}
 #log{font-size:11px;line-height:1.6}
 .log-entry{padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.1));color:var(--color-text-secondary,#666)}
@@ -63,10 +66,9 @@ h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-tr
 .emergency-desc{font-size:13px;color:var(--color-text-secondary,#666);margin-bottom:14px;line-height:1.5}
 .emergency-btn{padding:7px 14px;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:var(--border-radius-md,8px);background:transparent;cursor:pointer;font-size:12px;font-weight:500;margin-right:6px}
 .emergency-btn.primary{background:var(--color-background-danger,#fee2e2);border-color:rgba(220,38,38,0.3);color:var(--color-text-danger,#dc2626)}
-/* Win screen */
 #win-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center}
 #win-overlay.show{display:flex}
-.win-box{background:var(--color-background-primary,#fff);border-radius:var(--border-radius-lg,12px);padding:28px;max-width:420px;width:92%;position:relative}
+.win-box{background:var(--color-background-primary,#fff);border-radius:var(--border-radius-lg,12px);padding:28px;max-width:420px;width:92%}
 .win-logo{font-size:11px;font-weight:700;letter-spacing:.08em;color:#00a1e0;margin-bottom:16px;text-transform:uppercase}
 .win-subject{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--color-text-primary,#222)}
 .win-meta{font-size:11px;color:var(--color-text-secondary,#666);margin-bottom:16px}
@@ -100,7 +102,7 @@ h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-tr
       <p>Your org has been identified as a CMA environment. <strong>All existing configuration, customisation, and metadata will not be carried forward.</strong> A migration guide is available in Help &amp; Training.</p>
       <p>We understand this represents significant work. Salesforce is committed to making this transition as seamless as possible.*</p>
     </div>
-    <div class="win-footnote">* Migration tooling is currently in beta. Estimated general availability: TBC. Some metadata types may require manual recreation. Managed packages from the AppExchange will need to be reinstalled individually. Flows built on legacy architecture are not supported in HUOP and will need to be rebuilt from scratch. Your data is safe.** <br><br>** Data migration is the responsibility of the customer.</div>
+    <div class="win-footnote">* Migration tooling is currently in beta. Estimated general availability: TBC. Some metadata types may require manual recreation. Managed packages from the AppExchange will need to be reinstalled individually. Flows built on legacy architecture are not supported in HUOP and will need to be rebuilt from scratch. Your data is safe.**<br><br>** Data migration is the responsibility of the customer.</div>
     <div class="win-stats" id="win-stats"></div>
     <button class="win-migrate-btn" id="win-migrate-btn">Begin Migration →</button>
     <div style="font-size:10px;color:var(--color-text-secondary,#888);text-align:center">This will reset all progress. Double-click to confirm.</div>
@@ -150,34 +152,76 @@ h2{font-size:12px;font-weight:500;color:var(--color-text-secondary,#666);text-tr
 const SAVE_KEY='orgbuilder_v6';
 const WIN_UPGRADE_ID='s6';
 const WIN_UPGRADE_CAP=1000;
+
+// Per-item milestone multiplier tables
+// Format: {milestone_count: multiplier} — overrides global table for that item
+// Items without a custom table use the global defaults
+const ITEM_MILESTONES={
+  // Admin track — Standard Objects: weak early, massive late spike. Worth coming back to.
+  a1:{25:1.5, 50:2,  100:4,  200:25, 300:50, 500:80},
+  // Custom Fields: front-loaded, good early, tapers
+  a2:{25:3,   50:8,  100:12, 200:18, 300:25, 500:40},
+  // Profiles: steady ramp
+  a3:{25:2,   50:4,  100:10, 200:18, 300:30, 500:50},
+  // Validation Rules: big mid spike
+  a4:{25:2,   50:6,  100:20, 200:22, 300:30, 500:45},
+  // Reports: spikes early then decent late
+  a5:{25:4,   50:10, 100:12, 200:20, 300:28, 500:45},
+  // Email Templates: steady, nothing special
+  a6:{25:2,   50:5,  100:10, 200:18, 300:28, 500:45},
+  // List Views: mid spike
+  a7:{25:2,   50:4,  100:15, 200:22, 300:32, 500:50},
+  // Duplicate Rules: late spike to rival Standard Objects
+  a8:{25:1.5, 50:3,  100:6,  200:15, 300:45, 500:75},
+  // Dev track — some differentiation but less dramatic
+  d1:{25:2,   50:6,  100:12, 200:20, 300:30, 500:50},
+  d2:{25:3,   50:7,  100:10, 200:18, 300:28, 500:45},
+  d3:{25:2,   50:5,  100:14, 200:22, 300:32, 500:50},
+  d4:{25:2,   50:4,  100:10, 200:25, 300:35, 500:55},
+  d5:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  d6:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  d7:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  // Arch track — moderate differentiation
+  r1:{25:2,   50:5,  100:12, 200:22, 300:32, 500:52},
+  r2:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  r3:{25:3,   50:6,  100:10, 200:18, 300:28, 500:45},
+  r4:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  r5:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  r6:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+  r7:{25:2,   50:5,  100:10, 200:20, 300:30, 500:48},
+};
+// Global fallback milestone table
+const GLOBAL_MILESTONES={25:2,50:5,100:10,200:20,300:35,500:60};
+const MILESTONE_COUNTS=[25,50,100,200,300,500];
+
 const UPGRADES={
   admin:[
-    {id:'a1',name:'Standard Objects',desc:'Accounts, Contacts, the basics.',baseCost:10,baseRate:0.4,flavour:'Someone has to maintain them.'},
-    {id:'a2',name:'Custom Fields',desc:'Because 500 fields is never enough.',baseCost:55,baseRate:1.5,flavour:'Field limit? Never heard of it.'},
-    {id:'a3',name:'Profiles & Permissions',desc:'CRUD access nobody fully understands.',baseCost:280,baseRate:6,flavour:'The profile they asked for does not exist.'},
-    {id:'a4',name:'Validation Rules',desc:'Preventing bad data since 2006.',baseCost:1400,baseRate:22,flavour:'Required: everything, all the time.'},
-    {id:'a5',name:'Reports & Dashboards',desc:'Stakeholders will still use Excel.',baseCost:6000,baseRate:75,flavour:'That chart is now RAL. Obviously.'},
-    {id:'a6',name:'Email Templates',desc:'Managed — obviously.',baseCost:28000,baseRate:260,flavour:'Classic HTML, no inline styles, somehow works.'},
-    {id:'a7',name:'List Views',desc:'Everyone wants their own pinned list.',baseCost:120000,baseRate:900,flavour:'17 list views. None shared. All My Records.'},
-    {id:'a8',name:'Duplicate Rules',desc:'Matching on email. Mostly.',baseCost:500000,baseRate:3500,flavour:'False positives: many. False negatives: also many.'},
+    {id:'a1',name:'Standard Objects',desc:'Accounts, Contacts, the basics.',baseCost:10,baseRate:0.5,flavour:'Someone has to maintain them.'},
+    {id:'a2',name:'Custom Fields',desc:'Because 500 fields is never enough.',baseCost:55,baseRate:1.9,flavour:'Field limit? Never heard of it.'},
+    {id:'a3',name:'Profiles & Permissions',desc:'CRUD access nobody fully understands.',baseCost:280,baseRate:7.5,flavour:'The profile they asked for does not exist.'},
+    {id:'a4',name:'Validation Rules',desc:'Preventing bad data since 2006.',baseCost:1400,baseRate:27,flavour:'Required: everything, all the time.'},
+    {id:'a5',name:'Reports & Dashboards',desc:'Stakeholders will still use Excel.',baseCost:6000,baseRate:92,flavour:'That chart is now RAL. Obviously.'},
+    {id:'a6',name:'Email Templates',desc:'Managed — obviously.',baseCost:28000,baseRate:320,flavour:'Classic HTML, no inline styles, somehow works.'},
+    {id:'a7',name:'List Views',desc:'Everyone wants their own pinned list.',baseCost:120000,baseRate:1100,flavour:'17 list views. None shared. All My Records.'},
+    {id:'a8',name:'Duplicate Rules',desc:'Matching on email. Mostly.',baseCost:500000,baseRate:4200,flavour:'False positives: many. False negatives: also many.'},
   ],
   dev:[
-    {id:'d1',name:'Apex Triggers',desc:'Recursive? Definitely recursive.',baseCost:200,baseRate:5,flavour:'One trigger per object. Usually.'},
-    {id:'d2',name:'LWC Components',desc:'Faster than Aura. Allegedly.',baseCost:900,baseRate:18,flavour:'CSS isolation: a feature and a punishment.'},
-    {id:'d3',name:'REST APIs',desc:'Connected apps connecting apps.',baseCost:4000,baseRate:65,flavour:'Named Credential or hardcoded? We do not ask.'},
-    {id:'d4',name:'Scheduled Jobs',desc:'Runs at 2am. May or may not finish.',baseCost:16000,baseRate:220,flavour:'Batch size 200. Always 200.'},
-    {id:'d5',name:'Custom Metadata Types',desc:'Config as code. Basically.',baseCost:70000,baseRate:750,flavour:'Cannot query them in tests easily.'},
-    {id:'d6',name:'Platform Events',desc:'Near real-time. Very near.',baseCost:300000,baseRate:2500,flavour:'Subscribe once. Replay buffer optional.'},
-    {id:'d7',name:'Managed Package',desc:'ISV life. The joys of namespacing.',baseCost:1200000,baseRate:9000,flavour:'__c becomes __c__c. You will get used to it.'},
+    {id:'d1',name:'Apex Triggers',desc:'Recursive? Definitely recursive.',baseCost:200,baseRate:6.5,flavour:'One trigger per object. Usually.'},
+    {id:'d2',name:'LWC Components',desc:'Faster than Aura. Allegedly.',baseCost:900,baseRate:22,flavour:'CSS isolation: a feature and a punishment.'},
+    {id:'d3',name:'REST APIs',desc:'Connected apps connecting apps.',baseCost:4000,baseRate:80,flavour:'Named Credential or hardcoded? We do not ask.'},
+    {id:'d4',name:'Scheduled Jobs',desc:'Runs at 2am. May or may not finish.',baseCost:16000,baseRate:270,flavour:'Batch size 200. Always 200.'},
+    {id:'d5',name:'Custom Metadata Types',desc:'Config as code. Basically.',baseCost:70000,baseRate:920,flavour:'Cannot query them in tests easily.'},
+    {id:'d6',name:'Platform Events',desc:'Near real-time. Very near.',baseCost:300000,baseRate:3000,flavour:'Subscribe once. Replay buffer optional.'},
+    {id:'d7',name:'Managed Package',desc:'ISV life. The joys of namespacing.',baseCost:1200000,baseRate:11000,flavour:'__c becomes __c__c. You will get used to it.'},
   ],
   arch:[
-    {id:'r1',name:'Record-Triggered Flows',desc:'The Admin\'s Apex.',baseCost:5000,baseRate:30,flavour:'Before-save or after? Yes.'},
-    {id:'r2',name:'Data Model Design',desc:'ERD on a whiteboard. Gone by Monday.',baseCost:20000,baseRate:110,flavour:'The lookup or master-detail debate rages on.'},
-    {id:'r3',name:'Sandboxes',desc:'Dev, partial, full, staging, QA...',baseCost:80000,baseRate:380,flavour:'Refreshed last year. Probably fine.'},
-    {id:'r4',name:'Change Sets',desc:'Deployment via vibes.',baseCost:300000,baseRate:1300,flavour:'Validation error on a thing you did not touch.'},
-    {id:'r5',name:'DevOps Pipeline',desc:'Proper CI/CD. Very professional.',baseCost:1000000,baseRate:4200,flavour:'PRs require two approvals and a prayer.'},
-    {id:'r6',name:'Experience Cloud',desc:'Community portal. Rebranded again.',baseCost:4000000,baseRate:14000,flavour:'Guest user access: always more than intended.'},
-    {id:'r7',name:'Einstein Features',desc:'AI. Mostly credits for Copilot demos.',baseCost:15000000,baseRate:45000,flavour:'The ROI slide is chefs kiss.'},
+    {id:'r1',name:'Record-Triggered Flows',desc:'The Admin\'s Apex.',baseCost:5000,baseRate:38,flavour:'Before-save or after? Yes.'},
+    {id:'r2',name:'Data Model Design',desc:'ERD on a whiteboard. Gone by Monday.',baseCost:20000,baseRate:135,flavour:'The lookup or master-detail debate rages on.'},
+    {id:'r3',name:'Sandboxes',desc:'Dev, partial, full, staging, QA...',baseCost:80000,baseRate:460,flavour:'Refreshed last year. Probably fine.'},
+    {id:'r4',name:'Change Sets',desc:'Deployment via vibes.',baseCost:300000,baseRate:1600,flavour:'Validation error on a thing you did not touch.'},
+    {id:'r5',name:'DevOps Pipeline',desc:'Proper CI/CD. Very professional.',baseCost:1000000,baseRate:5000,flavour:'PRs require two approvals and a prayer.'},
+    {id:'r6',name:'Experience Cloud',desc:'Community portal. Rebranded again.',baseCost:4000000,baseRate:17000,flavour:'Guest user access: always more than intended.'},
+    {id:'r7',name:'Einstein Features',desc:'AI. Mostly credits for Copilot demos.',baseCost:15000000,baseRate:54000,flavour:'The ROI slide is chefs kiss.'},
   ],
   solo:[
     {id:'s1',name:'Writes Own Documentation',desc:'Nobody reads it. Still worth it.',baseCost:500000,baseRate:8000,flavour:'Confluence page: last edited by you, 2 years ago.'},
@@ -188,17 +232,16 @@ const UPGRADES={
     {id:'s6',name:'The Entire Org, Alone',desc:'Admin. Dev. Architect. Support. Trainer.',baseCost:500000000,baseRate:3000000,flavour:'Out of office set. Org still running perfectly.',cap:1000},
   ]
 };
-const MILESTONES=[25,50,100,200,300,500];
-const MILESTONE_MULT={25:2,50:5,100:10,200:20,300:35,500:60};
+
 const PERM_CERTS=[
   {id:'p_rateA',name:'Certified Admin',desc:'+30% all passive rates',cost:5,tier:1},
   {id:'p_click',name:'Power User',desc:'Click value x3',cost:6,tier:1},
-  {id:'p_unlock_dev',name:'Unlock Dev Track',desc:'Access the Dev upgrade track',cost:10,tier:1},
-  {id:'p_rateB',name:'Seasoned Admin',desc:'+50% all passive rates',cost:12,tier:1},
-  {id:'p_noemerg',name:'Technical Debt Cleared',desc:'Emergencies never penalise rates',cost:15,tier:1},
+  {id:'p_unlock_dev',name:'Unlock Dev Track',desc:'Access the Dev upgrade track',cost:8,tier:1},
+  {id:'p_rateB',name:'Seasoned Admin',desc:'+50% all passive rates',cost:10,tier:1},
+  {id:'p_noemerg',name:'Technical Debt Cleared',desc:'Emergencies never penalise rates',cost:12,tier:1},
   {id:'p_unlock_arch',name:'Unlock Arch Track',desc:'Access the Arch upgrade track',cost:25,tier:2},
-  {id:'p_certmult',name:'Multi-Certified',desc:'Cert haul x1.5 on Go Live',cost:20,tier:2},
-  {id:'p_keepmp',name:'CI/CD Pipeline',desc:'Keep 15% MP on prestige',cost:22,tier:2},
+  {id:'p_certmult',name:'Multi-Certified',desc:'Cert haul x1.5 on Go Live',cost:18,tier:2},
+  {id:'p_keepmp',name:'CI/CD Pipeline',desc:'Keep 15% MP on prestige',cost:24,tier:2},
   {id:'p_milestone',name:'Efficiency Drive',desc:'Milestone bonuses at half count',cost:30,tier:2},
   {id:'p_ratemult',name:'Platform Expert',desc:'All rates x2',cost:35,tier:2},
   {id:'p_unlock_solo',name:'Unlock Solo Admin Track',desc:'The ultimate track.',cost:60,tier:3},
@@ -252,15 +295,30 @@ function fmtNum(n){
   return Math.floor(n).toString();
 }
 function upgradeCost(base,count){return Math.floor(base*Math.pow(1.12,count));}
-function getMilestoneMult(count,mf){
+
+function getMilestoneMult(id,count,mf){
+  const table=ITEM_MILESTONES[id]||GLOBAL_MILESTONES;
   let mult=1;
-  MILESTONES.forEach(m=>{if(count>=Math.ceil(m*mf))mult=MILESTONE_MULT[m];});
+  MILESTONE_COUNTS.forEach(m=>{
+    if(count>=Math.ceil(m*mf))mult=table[m]||GLOBAL_MILESTONES[m];
+  });
   return mult;
 }
+function getNextMilestone(id,count,mf){
+  // Returns {count, mult} of the next milestone for this item, or null
+  const table=ITEM_MILESTONES[id]||GLOBAL_MILESTONES;
+  for(let i=0;i<MILESTONE_COUNTS.length;i++){
+    const m=MILESTONE_COUNTS[i];
+    const em=Math.ceil(m*mf);
+    if(count<em)return{count:em,mult:table[m]||GLOBAL_MILESTONES[m]};
+  }
+  return null;
+}
+
 function upgradeRate(u,count,S){
   if(count===0)return 0;
   const mf=S.milestoneFactor||1;
-  let r=u.baseRate*count*getMilestoneMult(count,mf)*(1+S.rateBonus)*(S.rateMult||1);
+  let r=u.baseRate*count*getMilestoneMult(u.id,count,mf)*(1+S.rateBonus)*(S.rateMult||1);
   if(u.id[0]==='s')r*=(S.soloBoost||1);
   if(S.emergencyPenalty&&S.emergencyPenalty.type==='rate')r*=S.emergencyPenalty.val;
   return r;
@@ -293,7 +351,7 @@ function calcBadges(S){
   return Math.max(1,Math.floor((Math.log10(score)-3)*2*(S.certMult||1)));
 }
 function defaultState(){
-  return{mp:0,totalMp:0,run:1,certs:0,badges:0,totalCerts:0,totalBadges:0,
+  return{mp:0,totalMp:0,allTimeMp:0,run:1,certs:0,badges:0,totalCerts:0,totalBadges:0,
     counts:{},permBought:[],unlockedTracks:[],
     rateBonus:0,rateMult:1,clickBonus:1,certMult:1,keepMp:0,
     noemergency:false,soloBoost:1,milestoneFactor:1,emergencyPenalty:null};
@@ -326,7 +384,7 @@ function getBuyQty(u){
   if(buyMode==='1')return Math.min(1,remaining);
   if(buyMode==='10')return Math.min(10,remaining);
   if(buyMode==='next'){
-    const next=MILESTONES.map(m=>Math.ceil(m*mf)).find(m=>m>cnt);
+    const next=MILESTONE_COUNTS.map(m=>Math.ceil(m*mf)).find(m=>m>cnt);
     return next?Math.min(Math.max(1,next-cnt),remaining):Math.min(1,remaining);
   }
   let q=0,mp=S.mp,c=cnt;
@@ -341,7 +399,7 @@ function showWinScreen(){
   winShown=true;
   const tot=Object.values(S.counts).reduce((a,b)=>a+b,0);
   document.getElementById('win-stats').textContent=
-    `Run #${S.run} · ${S.totalCerts} certs earned · ${fmtNum(S.totalMp)} lifetime MP · ${tot} total upgrades`;
+    `Run #${S.run} · ${S.totalCerts} certs earned · ${fmtNum(S.allTimeMp||S.totalMp)} lifetime MP · ${tot} total upgrades`;
   document.getElementById('win-overlay').classList.add('show');
   saveState();
 }
@@ -360,7 +418,7 @@ function doReset(){
 function renderUpgrades(){
   const el=document.getElementById('upgrades-list');
   if(!isUnlocked(activeTrack,S)){
-    const req={dev:'10 certs',arch:'25 certs',solo:'60 certs'};
+    const req={dev:'8 certs',arch:'25 certs',solo:'60 certs'};
     el.innerHTML=`<div class="track-locked-msg"><strong>${activeTrack.charAt(0).toUpperCase()+activeTrack.slice(1)} track locked</strong><br>Unlock via permanent upgrade (${req[activeTrack]})</div>`;
     return;
   }
@@ -371,18 +429,27 @@ function renderUpgrades(){
     const qty=isMaxed?0:getBuyQty(u);
     const cost=isMaxed?0:totalCost(u,qty);
     const mf=S.milestoneFactor||1;
-    const effMilestones=MILESTONES.map(m=>Math.ceil(m*mf));
-    const nextIdx=effMilestones.findIndex(m=>m>cnt);
-    const milBadge=!isMaxed&&nextIdx>=0&&cnt>0?`<span class="milestone-badge">x${MILESTONE_MULT[MILESTONES[nextIdx]]} @${effMilestones[nextIdx]}</span>`:'';
+    const nextMil=getNextMilestone(u.id,cnt,mf);
+    const milBadge=!isMaxed&&nextMil&&cnt>0?`<span class="milestone-badge">x${nextMil.mult} @${nextMil.count}</span>`:'';
     const qtyLabel=isMaxed?'MAX':buyMode==='max'?`x${qty}`:buyMode==='next'?`+${qty}`:buyMode==='10'?'x10':'x1';
     const costLabel=isMaxed?'—':fmtNum(cost)+' MP '+qtyLabel;
+    // Rate display: current → projected after buying qty
+    const currentRate=upgradeRate(u,cnt,S);
+    const projectedRate=isMaxed?currentRate:upgradeRate(u,cnt+qty,S);
+    let rateLabel;
+    if(isMaxed){
+      rateLabel=fmtNum(currentRate)+'/s';
+    } else if(cnt===0){
+      rateLabel=fmtNum(projectedRate)+'/s';
+    } else {
+      rateLabel=fmtNum(currentRate)+'/s<span class="arrow">→</span>'+fmtNum(projectedRate)+'/s';
+    }
     return `<div class="upgrade-item${isMaxed?' maxed':S.mp>=cost?'':' locked'}" data-id="${u.id}">
       <div class="upgrade-header"><span class="upgrade-name">${u.name}</span><span class="upgrade-count">${isMaxed?'MAX':cnt}</span></div>
       <div class="upgrade-desc">${u.desc}</div>
       <div class="upgrade-footer">
-        <span class="upgrade-cost">${costLabel}</span>
-        <span class="upgrade-rate">${fmtNum(upgradeRate(u,cnt,S))}/s</span>
-        ${milBadge}
+        <div class="upgrade-footer-row"><span class="upgrade-cost">${costLabel}</span></div>
+        <div class="upgrade-footer-row"><span class="upgrade-rate">${rateLabel}</span>${milBadge}</div>
       </div>
     </div>`;
   }).join('');
@@ -450,7 +517,8 @@ function renderStats(){
     <div class="stat-row"><span class="stat-label">MP/s</span><span>${fmtNum(getTotalRate(S))}</span></div>
     <div class="stat-row"><span class="stat-label">Per click</span><span>${fmtNum(getClickValue(S))}</span></div>
     <div class="stat-row"><span class="stat-label">Total upgrades</span><span>${tot}</span></div>
-    <div class="stat-row"><span class="stat-label">Lifetime MP</span><span>${fmtNum(S.totalMp)}</span></div>
+    <div class="stat-row"><span class="stat-label">This run MP</span><span>${fmtNum(S.totalMp)}</span></div>
+    <div class="stat-row"><span class="stat-label">All-time MP</span><span>${fmtNum(S.allTimeMp||S.totalMp)}</span></div>
     <div class="stat-row"><span class="stat-label">Run</span><span>#${S.run}</span></div>
     <div class="stat-row"><span class="stat-label">Total certs</span><span>${S.totalCerts}</span></div>`;
 }
@@ -510,7 +578,7 @@ function triggerEmergency(){
 }
 
 document.getElementById('click-btn').addEventListener('click',()=>{
-  const v=getClickValue(S);S.mp+=v;S.totalMp+=v;
+  const v=getClickValue(S);S.mp+=v;S.totalMp+=v;S.allTimeMp=(S.allTimeMp||0)+v;
   document.getElementById('mp-display').textContent=fmtNum(S.mp);
 });
 document.querySelectorAll('.track-tab').forEach(btn=>{
@@ -548,12 +616,12 @@ document.getElementById('upgrades-list').addEventListener('click',e=>{
   S.counts[u.id]=Math.min(old+qty,cap);
   const nw=S.counts[u.id];
   const mf=S.milestoneFactor||1;
-  MILESTONES.forEach(m=>{
+  MILESTONE_COUNTS.forEach(m=>{
     const em=Math.ceil(m*mf);
-    if(old<em&&nw>=em)addLog(`Milestone! ${u.name} hit ${em} — rate x${MILESTONE_MULT[m]}!`,'milestone');
+    const table=ITEM_MILESTONES[u.id]||GLOBAL_MILESTONES;
+    if(old<em&&nw>=em)addLog(`Milestone! ${u.name} hit ${em} — rate x${table[m]||GLOBAL_MILESTONES[m]}!`,'milestone');
   });
   if(old===0)addLog(`Purchased: ${u.name}. ${u.flavour}`);
-  // Check win condition
   if(u.id===WIN_UPGRADE_ID&&nw>=WIN_UPGRADE_CAP&&!winShown){
     addLog('The Entire Org, Alone: fully realised. There is nothing left to configure.','milestone');
     setTimeout(showWinScreen,800);
@@ -606,7 +674,6 @@ document.getElementById('reset-btn').addEventListener('click',()=>{
   btn.style.opacity='1';btn.style.background='var(--color-background-warning,#fef3cd)';
   setTimeout(()=>{if(btn.dataset.confirming==='1'){btn.dataset.confirming='0';btn.textContent='Reset all progress';btn.style.opacity='.5';btn.style.background='';}},4000);
 });
-// Win screen migrate button — double-click confirm
 document.getElementById('win-migrate-btn').addEventListener('click',()=>{
   const btn=document.getElementById('win-migrate-btn');
   if(btn.dataset.confirming==='1'){
@@ -616,10 +683,7 @@ document.getElementById('win-migrate-btn').addEventListener('click',()=>{
   btn.dataset.confirming='1';
   btn.textContent='Are you sure? Click again to begin migration';
   setTimeout(()=>{
-    if(btn.dataset.confirming==='1'){
-      btn.dataset.confirming='0';
-      btn.textContent='Begin Migration →';
-    }
+    if(btn.dataset.confirming==='1'){btn.dataset.confirming='0';btn.textContent='Begin Migration →';}
   },4000);
 });
 
@@ -628,7 +692,7 @@ setInterval(()=>{
   const dt=Math.min((now-lastTick)/1000,1);
   lastTick=now;
   const rate=getTotalRate(S);
-  S.mp+=rate*dt;S.totalMp+=rate*dt;
+  S.mp+=rate*dt;S.totalMp+=rate*dt;S.allTimeMp=(S.allTimeMp||0)+rate*dt;
   const pbar=document.getElementById('penalty-bar');
   if(S.emergencyPenalty){
     if(now>S.emergencyPenalty.expires){
@@ -648,6 +712,7 @@ setInterval(()=>{
   document.getElementById('mp-display').textContent=fmtNum(S.mp);
   document.getElementById('mp-rate').textContent=fmtNum(rate)+' MP/s';
   renderTrackTabs();
+  renderPrestige();
   if(isUnlocked(activeTrack,S)){
     UPGRADES[activeTrack].forEach(u=>{
       const el=document.querySelector(`[data-id="${u.id}"]`);
@@ -662,6 +727,15 @@ setInterval(()=>{
         const costEl=el.querySelector('.upgrade-cost');
         const qtyLabel=buyMode==='max'?`x${qty}`:`+${qty}`;
         if(costEl)costEl.textContent=fmtNum(cost)+' MP '+qtyLabel;
+        // Also update projected rate on tick for max/next since qty changes
+        const rateEl=el.querySelector('.upgrade-rate');
+        if(rateEl){
+          const currentRate=upgradeRate(u,cnt,S);
+          const projectedRate=upgradeRate(u,cnt+qty,S);
+          rateEl.innerHTML=cnt===0
+            ?fmtNum(projectedRate)+'/s'
+            :fmtNum(currentRate)+'/s<span class="arrow">→</span>'+fmtNum(projectedRate)+'/s';
+        }
       }
     });
   }
